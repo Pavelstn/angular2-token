@@ -1,5 +1,7 @@
 import { Injectable, Optional } from '@angular/core';
 import { ActivatedRoute, Router, CanActivate } from '@angular/router';
+import { CookieService } from 'ngx-cookie-service';
+
 import {
     Http,
     Response,
@@ -70,7 +72,8 @@ export class Angular2TokenService implements CanActivate {
     constructor(
         private http: Http,
         @Optional() private activatedRoute: ActivatedRoute,
-        @Optional() private router: Router
+        @Optional() private router: Router,
+        private cookieService: CookieService
     ) { }
 
     userSignedIn(): boolean {
@@ -83,10 +86,14 @@ export class Angular2TokenService implements CanActivate {
         else {
             // Store current location in storage (usefull for redirection after signing in)
             if (this.atOptions.signInStoredUrlStorageKey) {
-                localStorage.setItem(
+                this.cookieService.set(
                     this.atOptions.signInStoredUrlStorageKey,
                     window.location.pathname + window.location.search
                 );
+                /*localStorage.setItem(
+                    this.atOptions.signInStoredUrlStorageKey,
+                    window.location.pathname + window.location.search
+                );*/
             }
 
             // Redirect user to sign in if signInRedirect is set
@@ -231,11 +238,11 @@ export class Angular2TokenService implements CanActivate {
     signOut(): Observable<Response> {
         let observ = this.delete(this.getUserPath() + this.atOptions.signOutPath);
 
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('client');
-        localStorage.removeItem('expiry');
-        localStorage.removeItem('tokenType');
-        localStorage.removeItem('uid');
+        this.cookieService.delete('accessToken');
+        this.cookieService.delete('client');
+        this.cookieService.delete('expiry');
+        this.cookieService.delete('tokenType');
+        this.cookieService.delete('uid');
 
         this.atCurrentAuthData = null;
         this.atCurrentUserType = null;
@@ -423,7 +430,7 @@ export class Angular2TokenService implements CanActivate {
     // Try to load auth data
     private tryLoadAuthData(): void {
 
-        let userType = this.getUserTypeByName(localStorage.getItem('userType'));
+        let userType = this.getUserTypeByName(this.cookieService.get('userType'));
 
         if (userType)
             this.atCurrentUserType = userType;
@@ -469,11 +476,11 @@ export class Angular2TokenService implements CanActivate {
     private getAuthDataFromStorage(): void {
 
         let authData: AuthData = {
-            accessToken:    localStorage.getItem('accessToken'),
-            client:         localStorage.getItem('client'),
-            expiry:         localStorage.getItem('expiry'),
-            tokenType:      localStorage.getItem('tokenType'),
-            uid:            localStorage.getItem('uid')
+            accessToken:    this.cookieService.get('accessToken'),
+            client:         this.cookieService.get('client'),
+            expiry:         this.cookieService.get('expiry'),
+            tokenType:      this.cookieService.get('tokenType'),
+            uid:            this.cookieService.get('uid')
         };
 
         if (this.checkAuthData(authData))
@@ -510,14 +517,14 @@ export class Angular2TokenService implements CanActivate {
 
             this.atCurrentAuthData = authData;
 
-            localStorage.setItem('accessToken', authData.accessToken);
-            localStorage.setItem('client', authData.client);
-            localStorage.setItem('expiry', authData.expiry);
-            localStorage.setItem('tokenType', authData.tokenType);
-            localStorage.setItem('uid', authData.uid);
+            this.cookieService.set('accessToken', authData.accessToken);
+            this.cookieService.set('client', authData.client);
+            this.cookieService.set('expiry', authData.expiry);
+            this.cookieService.set('tokenType', authData.tokenType);
+            this.cookieService.set('uid', authData.uid);
 
             if (this.atCurrentUserType != null)
-                localStorage.setItem('userType', this.atCurrentUserType.name);
+                this.cookieService.set('userType', this.atCurrentUserType.name);
 
         }
     }
