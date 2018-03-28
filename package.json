@@ -1,5 +1,5 @@
 {
-  "name": "angular2-token",
+  "name": "angular2-token-cookie",
   "version": "0.0.1",
   "description": "Angular2 service for token based authentication",
   "main": "./angular2-token.js",
